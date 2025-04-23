@@ -1,0 +1,10 @@
+name: paramd-benchmarks
+channels:
+  - conda-forge
+dependencies:
+  - cmake>=3.22
+  - python>=3.13
+  - matplotlib>=3.10.1
+  - numpy>=2.2.5
+  - pandas>=2.2.3
+  - seaborn>=0.13.2
