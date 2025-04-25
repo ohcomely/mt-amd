@@ -1,4 +1,7 @@
 # ParAMD: Parallel Approximate Minimum Degree Algorithm
+
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-g.svg)](https://opensource.org/licenses/BSD-3-Clause) [![Version](https://img.shields.io/badge/Version-v1.0.0-blue.svg)]() [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.15283182.svg)](http://dx.doi.org/10.5281/zenodo.15283182)
+
 [[Installation]](#installation) [[Using ParAMD]](#using-paramd) [[Replicating Our benchmarks]](#replicating-our-benchmarks) [[Citation and Acknowledgments]](#citation-and-acknowledgments) [[Copyright]](#copyright)
 
 ParAMD is a shared memory parallel implementation of the approximate minimum degree (AMD) algorithm with multiple elimination via distance-2 independent sets.
