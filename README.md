@@ -3,7 +3,7 @@
 
 ParAMD is a shared memory parallel implementation of the approximate minimum degree (AMD) algorithm with multiple elimination via distance-2 independent sets.
 
-For more information, please read our preprint paper [Parallelizing the Approximate Minimum Degree Ordering Algorithm: Strategies and Evaluation]() that is going to be appeared on arXiv.
+For more information, please read our preprint paper [Parallelizing the Approximate Minimum Degree Ordering Algorithm: Strategies and Evaluation](https://arxiv.org/abs/2504.17097) on arXiv.
 
 ## Installation
 ### Build
@@ -253,7 +253,15 @@ This will generate a figure at `/path/to/a/clean/scratch/dir/plots/tuning.png`. 
 If you find this code useful, please cite our paper:
 
 ```bibtex
-Our preprint is going to be appeared on arXiv.
+@misc{paramd,
+      title={Parallelizing the Approximate Minimum Degree Ordering Algorithm: Strategies and Evaluation}, 
+      author={Yen-Hsiang Chang and Aydın Buluç and James Demmel},
+      year={2025},
+      eprint={2504.17097},
+      archivePrefix={arXiv},
+      primaryClass={cs.DC},
+      url={https://arxiv.org/abs/2504.17097}, 
+}
 ```
 
 This software optionally uses AMD (Approximate Minimum Degree), primarily used when benchmarking, from the [SuiteSparse project](https://github.com/DrTimothyAldenDavis/SuiteSparse) which is licensed under the BSD 3-Clause License. Our codebase extracts the workflow from SuiteSparse AMD, which is a sequential implementation, where we enable parallelism via multiple elimination using distance-2 independent sets to build our ParAMD.
