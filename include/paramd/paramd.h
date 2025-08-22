@@ -2,17 +2,37 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <immintrin.h>
 
-namespace paramd {
+namespace paramd
+{
+  constexpr size_t CACHE_LINE_SIZE = 64;
+
+  // Cache-aligned allocation helper
+  template <typename T>
+  T *aligned_alloc_cache(size_t count)
+  {
+    void *ptr = nullptr;
+    if (posix_memalign(&ptr, CACHE_LINE_SIZE, count * sizeof(T)) != 0)
+    {
+      throw std::bad_alloc();
+    }
+    return static_cast<T *>(ptr);
+  }
+
+// Cache line aligned struct
+#define CACHE_ALIGNED alignas(CACHE_LINE_SIZE)
+
   typedef int32_t vtype;
   typedef int32_t etype;
 
   // config used for paramd
-  struct config {
+  struct config
+  {
     double mult, lim, mem;
     uint64_t seed;
     bool breakdown, stat, sym;
-    
+
     // Default constructor for config
     config();
 
@@ -21,7 +41,8 @@ namespace paramd {
   };
 
   // matrix storage
-  struct matrix {
+  struct matrix
+  {
     vtype n;
     etype nnz;
     std::vector<etype> rowptr;
@@ -29,7 +50,7 @@ namespace paramd {
 
     // Construct a matrix from fp
     matrix(std::string fp);
-    
+
     // Apply iperm symmetrically to the matrix
     void apply_inverse_permutation(const std::vector<vtype> &iperm);
   };
@@ -48,4 +69,7 @@ namespace paramd {
 
   // Parallel Approximate Minimum Degree Ordering Algorithm
   uint64_t paramd(const vtype n, const vtype *rowptr, const etype *colidx, vtype *perm, const config &config);
+
+  // Optimized Parallel Approximate Minimum Degree Ordering Algorithm
+  uint64_t paramd_optimized(const vtype n, const vtype *rowptr, const etype *colidx, vtype *perm, const config &config);
 } // end of namespace paramd

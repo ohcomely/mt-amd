@@ -10,59 +10,26 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Set the installation path SuiteSparse is installed
-set(SUITESPARSE_ROOT "" CACHE PATH "Path to the SuiteSparse installation")
+# SuiteSparse include and lib paths (user-known)
+include_directories(/usr/include/suitesparse /usr/local/include/suitesparse)
+link_directories(/usr/lib/x86_64-linux-gnu /usr/local/lib)
 
-# Add preprocessor macro if SuiteSparse is installed
-if (SUITESPARSE_ROOT)
-  message(STATUS "SuiteSparse root directory: ${SUITESPARSE_ROOT}")
+# Define macro to indicate SuiteSparse usage
+add_definitions(-DUSE_SUITESPARSE)
 
-  # Define a preprocessor macro USE_SUITESPARSE to indicate that SuiteSparse is being used
-  add_definitions(-DUSE_SUITESPARSE)
-
-  # Set SuiteSparse include and library paths based on SUITESPARSE_ROOT
-  set(SUITESPARSE_INCLUDE_DIR "${SUITESPARSE_ROOT}/include")
-  set(SUITESPARSE_LIB_DIR_64 "${SUITESPARSE_ROOT}/lib64")
-  set(SUITESPARSE_LIB_DIR "${SUITESPARSE_ROOT}/lib")
-
-
-  # Check that the necessary directories exist
-  if (NOT EXISTS "${SUITESPARSE_INCLUDE_DIR}/suitesparse/amd.h") 
-      message(FATAL_ERROR "SuiteSparse AMD (suitesparse/amd.h) not found!")
-  endif()
-
-  if (NOT EXISTS "${SUITESPARSE_LIB_DIR_64}/libamd.so" AND NOT EXISTS "${SUITESPARSE_LIB_DIR_64}/libamd.a")
-    if (NOT EXISTS "${SUITESPARSE_LIB_DIR}/libamd.so" AND NOT EXISTS "${SUITESPARSE_LIB_DIR}/libamd.a")
-      message(FATAL_ERROR "SuiteSparse library (libamd) not found!")
-    endif()
-  endif()
-
-  # Find the SuiteSparse AMD library
-  find_library(SUITESPARSE_AMD_LIB NAMES amd
-    PATHS ${SUITESPARSE_LIB_DIR_64} ${SUITESPARSE_LIB_DIR}
-    NO_DEFAULT_PATH
-  )
-
-  if (NOT SUITESPARSE_AMD_LIB)
-    message(FATAL_ERROR "Could not find SuiteSparse AMD library!")
-  endif()
-
-  # Include the SuiteSparse headers
-  include_directories(${SUITESPARSE_INCLUDE_DIR})
-
-else()
-  message(STATUS "SUITESPARSE_ROOT not specified, SuiteSparse will not be used.")
-endif()
-
+# Your headers
 include_directories(include)
 
+# Source files
 set(SOURCES
   src/config.cpp
   src/matrix.cpp
   src/paramd.cpp
+  src/paramd_optimized.cpp
   src/utils.cpp
 )
 
+# Shared library
 add_library(paramd_lib SHARED ${SOURCES})
 
 set_target_properties(paramd_lib PROPERTIES
@@ -72,20 +39,20 @@ set_target_properties(paramd_lib PROPERTIES
   PUBLIC_HEADER include/paramd/paramd.h
 )
 
+# Main executable
 add_executable(paramd bin/main.cpp)
 
-target_link_libraries(paramd PRIVATE paramd_lib)
+# Link your lib and SuiteSparse
+target_link_libraries(paramd PRIVATE paramd_lib amd)
 
-if (SUITESPARSE_AMD_LIB)
-  target_link_libraries(paramd PRIVATE ${SUITESPARSE_AMD_LIB})
-endif()
-
+# Add OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
   target_link_libraries(paramd_lib PRIVATE OpenMP::OpenMP_CXX)
   target_link_libraries(paramd PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
+# Install rules
 install(TARGETS paramd_lib
   LIBRARY DESTINATION lib
   PUBLIC_HEADER DESTINATION include/paramd
