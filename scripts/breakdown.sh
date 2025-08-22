@@ -20,6 +20,10 @@ do
     OMP_NUM_THREADS=$thread OMP_PLACE=cores ./build/paramd \
       --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd --seed 1 --breakdown \
       > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd.breakdown.s1.t$thread.log
+    echo "--Running ParAMD Optimized with $thread thread(s)"
+    OMP_NUM_THREADS=$thread OMP_PLACE=cores ./build/paramd \
+      --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd_optimized --seed 1 --breakdown \
+      > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd_optimized.breakdown.s1.t$thread.log
   done
 done
 

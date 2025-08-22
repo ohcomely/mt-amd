@@ -39,17 +39,29 @@ def scaling(scratch_dir):
     t1 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.scaling.s{s}.t1.log')[1] for s in seed])
     f64 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.scaling.s{s}.t64.log')[0] for s in seed])
     t64 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.scaling.s{s}.t64.log')[1] for s in seed])
+    fo1 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.scaling.s{s}.t1.log')[0] for s in seed])
+    to1 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.scaling.s{s}.t1.log')[1] for s in seed])
+    fo64 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.scaling.s{s}.t64.log')[0] for s in seed])
+    to64 = np.median([parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.scaling.s{s}.t64.log')[1] for s in seed])
     df[matrix] = {
       'SuiteSparse time (sec)': f'{tamd:.2f}',
       'ParAMD 1t time (sec)': f'{t1:.2f}',
       'ParAMD 64t time (sec)': f'{t64:.2f}',
+      'ParAMD Optimized 1t time (sec)': f'{to1:.2f}',
+      'ParAMD Optimized 64t time (sec)': f'{to64:.2f}',
       'ParAMD 1t Speedup over SuiteSparse': f'{tamd/t1:.2f}x',
       'ParAMD 64t Speedup over SuiteSparse': f'{tamd/t64:.2f}x',
+      'ParAMD Optimized 1t Speedup over SuiteSparse': f'{tamd/to1:.2f}x',
+      'ParAMD Optimized 64t Speedup over SuiteSparse': f'{tamd/to64:.2f}x',
       r'SuiteSparse #Fill-ins': f'{famd:.2e}',
       r'ParAMD 1t #Fill-ins': f'{f1:.2e}',
       r'ParAMD 64t #Fill-ins': f'{f64:.2e}',
+      r'ParAMD Optimized 1t #Fill-ins': f'{fo1:.2e}',
+      r'ParAMD Optimized 64t #Fill-ins': f'{fo64:.2e}',
       'ParAMD 1t Fill-in Ratio over SuiteSparse': f'{f1/famd:.2f}x',
       'ParAMD 64t Fill-in Ratio over SuiteSparse': f'{f64/famd:.2f}x',
+      'ParAMD Optimized 1t Fill-in Ratio over SuiteSparse': f'{fo1/famd:.2f}x',
+      'ParAMD Optimized 64t Fill-in Ratio over SuiteSparse': f'{fo64/famd:.2f}x',
     }
   df = df.T
   savepath = scratch_dir / 'plots' / 'scaling.csv'
@@ -70,27 +82,46 @@ def breakdown(scratch_dir):
     return [aat, core, dist2, other]
   label = ['A+A^T', 'Core', 'Distance-2 Independent Sets', 'Other']
   color = sns.color_palette('colorblind')
-  fig, ax = plt.subplots(3, 3, figsize = (32, 24))
+  fig, ax = plt.subplots(3, 6, figsize = (64, 24))
 
   nt = [1, 2, 4, 8, 16, 32, 64]
   xticks = [1, 2, 3, 4, 5, 6, 7]
   for ind, matrix in enumerate(dataset):
     i  = ind // 3
-    j = ind % 3
+    j_paramd = (ind % 3) * 2
+    j_optimized = j_paramd + 1
+    
+    # ParAMD plot
     bottom = np.zeros(7)
     res = [parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.breakdown.s1.t{t}.log') for t in nt]
     res = np.array(res).T
     for k in range(res.shape[0]):
-      ax[i, j].bar(xticks, res[k], 1, lw = 3, edgecolor = 'black', 
+      ax[i, j_paramd].bar(xticks, res[k], 1, lw = 3, edgecolor = 'black', 
                    label = label[k], color = color[k], bottom = bottom)
       bottom += res[k]
-    ax[i, j].set_xticks(xticks, nt)
-    ax[i, j].set_title(matrix, y = 1.02, size = 26)
-    ax[i, j].set_xlim([0, 8])
-    ax[i, j].set_xlabel('Number of Threads', fontsize = 26)
-    ax[i, j].set_ylabel('Time (sec)', fontsize = 26)
-    ax[i, j].tick_params(axis = 'both', labelsize = 26)
-    ax[i, j].grid(axis = 'y')
+    ax[i, j_paramd].set_xticks(xticks, nt)
+    ax[i, j_paramd].set_title(f'{matrix} - ParAMD', y = 1.02, size = 26)
+    ax[i, j_paramd].set_xlim([0, 8])
+    ax[i, j_paramd].set_xlabel('Number of Threads', fontsize = 26)
+    ax[i, j_paramd].set_ylabel('Time (sec)', fontsize = 26)
+    ax[i, j_paramd].tick_params(axis = 'both', labelsize = 26)
+    ax[i, j_paramd].grid(axis = 'y')
+    
+    # ParAMD Optimized plot
+    bottom = np.zeros(7)
+    res = [parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.breakdown.s1.t{t}.log') for t in nt]
+    res = np.array(res).T
+    for k in range(res.shape[0]):
+      ax[i, j_optimized].bar(xticks, res[k], 1, lw = 3, edgecolor = 'black', 
+                   label = label[k], color = color[k], bottom = bottom)
+      bottom += res[k]
+    ax[i, j_optimized].set_xticks(xticks, nt)
+    ax[i, j_optimized].set_title(f'{matrix} - ParAMD Optimized', y = 1.02, size = 26)
+    ax[i, j_optimized].set_xlim([0, 8])
+    ax[i, j_optimized].set_xlabel('Number of Threads', fontsize = 26)
+    ax[i, j_optimized].set_ylabel('Time (sec)', fontsize = 26)
+    ax[i, j_optimized].tick_params(axis = 'both', labelsize = 26)
+    ax[i, j_optimized].grid(axis = 'y')
  
   handles, labels = ax[0, 0].get_legend_handles_labels()
   fig.legend(handles, labels, loc = 'lower center', ncols = 4, bbox_to_anchor=(0.5, -0.03), fontsize = 26)
@@ -105,16 +136,29 @@ def distribution(scratch_dir):
       log = f.read()
       return [int(x) for x in re.findall(r'Size of distance-2 independent sets: \[(.*), \]', log)[0].split(',')]
   
-  data = [parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.distribution.s1.t64.log') for matrix in dataset]
+  data_paramd = [parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.distribution.s1.t64.log') for matrix in dataset]
+  data_optimized = [parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.distribution.s1.t64.log') for matrix in dataset]
 
-  fig, ax = plt.subplots(figsize=(32, 8))
-  sns.violinplot(data=data, ax=ax, log_scale=True, palette = "colorblind", cut = 0)
-  ax.set_ylabel('Size of Distance-2 Independent Sets', fontsize = 26)
-  ax.set_xticks(range(len(dataset)), dataset, fontsize = 26)
-  ax.tick_params(axis = 'y', labelsize = 26)
+  fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(32, 16))
   
-  ax.axhline(y = 64, color = 'black', linestyle='--', lw = 2)
-  ax.grid(axis = 'y')
+  # ParAMD distribution plot
+  sns.violinplot(data=data_paramd, ax=ax1, log_scale=True, palette = "colorblind", cut = 0)
+  ax1.set_ylabel('Size of Distance-2 Independent Sets', fontsize = 26)
+  ax1.set_title('ParAMD Distribution', fontsize = 26)
+  ax1.set_xticks(range(len(dataset)), dataset, fontsize = 26)
+  ax1.tick_params(axis = 'y', labelsize = 26)
+  ax1.axhline(y = 64, color = 'black', linestyle='--', lw = 2)
+  ax1.grid(axis = 'y')
+  
+  # ParAMD Optimized distribution plot
+  sns.violinplot(data=data_optimized, ax=ax2, log_scale=True, palette = "colorblind", cut = 0)
+  ax2.set_ylabel('Size of Distance-2 Independent Sets', fontsize = 26)
+  ax2.set_title('ParAMD Optimized Distribution', fontsize = 26)
+  ax2.set_xticks(range(len(dataset)), dataset, fontsize = 26)
+  ax2.tick_params(axis = 'y', labelsize = 26)
+  ax2.axhline(y = 64, color = 'black', linestyle='--', lw = 2)
+  ax2.grid(axis = 'y')
+  
   plt.tight_layout()
   savepath = scratch_dir / 'plots' / 'distribution.png'
   print(f'Saving distribution plot to: {savepath}')
@@ -129,37 +173,73 @@ def tuning(scratch_dir):
       fill = int(re.findall(r'Fill = (.*)', log)[0])
       return core, dist2, fill
 
-  fig, ax = plt.subplots(2, 3, figsize = (32, 16))
+  fig, ax = plt.subplots(4, 3, figsize = (32, 32))
   mult_vals = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
   lim_vals = [8, 32, 128, 512, 2048]
   base = [10 ** 8, 10 ** 12]
   for ind, matrix in enumerate(['nd24k', 'nlpkkt240']):
+    # ParAMD results
     core, dist2, fill = [], [], []
     for lim in lim_vals:
       core.append([]), dist2.append([]), fill.append([])
       for mult in mult_vals:
           c, d, f = parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd.tuning.s1.t64.m{mult}.l{lim * 64}.log')
           core[-1].append(c), dist2[-1].append(d), fill[-1].append(f / base[ind])
-    sns.heatmap(core, ax = ax[ind, 0], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 24}, 
+    
+    # ParAMD Optimized results
+    core_opt, dist2_opt, fill_opt = [], [], []
+    for lim in lim_vals:
+      core_opt.append([]), dist2_opt.append([]), fill_opt.append([])
+      for mult in mult_vals:
+          c, d, f = parse(f'{scratch_dir}/dataset/{matrix}/{matrix}.paramd_optimized.tuning.s1.t64.m{mult}.l{lim * 64}.log')
+          core_opt[-1].append(c), dist2_opt[-1].append(d), fill_opt[-1].append(f / base[ind])
+    # ParAMD heatmaps
+    sns.heatmap(core, ax = ax[ind*2, 0], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20}, 
                 annot=True, fmt = f'.{3-ind}f', cmap = sns.cm.rocket_r, linewidth = 1.5)
-    sns.heatmap(dist2, ax = ax[ind, 1], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 24},
+    sns.heatmap(dist2, ax = ax[ind*2, 1], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20},
                 annot=True, fmt = f'.{3-ind}f', cmap = sns.cm.rocket_r, linewidth = 1.5)
-    sns.heatmap(fill, ax = ax[ind, 2], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 24},
+    sns.heatmap(fill, ax = ax[ind*2, 2], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20},
                 annot=True, fmt = '.2f', cmap = sns.cm.rocket_r, linewidth = 1.5)
+    
+    # ParAMD Optimized heatmaps
+    sns.heatmap(core_opt, ax = ax[ind*2+1, 0], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20}, 
+                annot=True, fmt = f'.{3-ind}f', cmap = sns.cm.rocket_r, linewidth = 1.5)
+    sns.heatmap(dist2_opt, ax = ax[ind*2+1, 1], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20},
+                annot=True, fmt = f'.{3-ind}f', cmap = sns.cm.rocket_r, linewidth = 1.5)
+    sns.heatmap(fill_opt, ax = ax[ind*2+1, 2], xticklabels = mult_vals, yticklabels = lim_vals, annot_kws = {"fontsize": 20},
+                annot=True, fmt = '.2f', cmap = sns.cm.rocket_r, linewidth = 1.5)
+    
     for j in range(3):
-      cbar = ax[ind, j].collections[0].colorbar.ax.tick_params(labelsize = 24)
-      ax[ind, j].invert_yaxis()
-      ax[ind, j].tick_params(axis = 'y', labelrotation=0)
-      ax[ind, j].set_xlabel('mult', fontsize = 24)
-      ax[ind, j].set_ylabel('lim', fontsize = 24)
-      ax[ind, j].tick_params(axis = 'both', labelsize = 24)
-    ax[ind, 0].set_ylabel(f'{matrix}\n\nlim', fontsize = 24)
-  ax[0, 0].set_title('Time spent on core AMD (sec)', size = 24)
-  ax[0, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 24)
-  ax[0, 2].set_title(r'#Fill-ins ($\times10^8$)', size = 24)
-  ax[1, 0].set_title('Time spent on core AMD (sec)', size = 24)
-  ax[1, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 24)
-  ax[1, 2].set_title(r'#Fill-ins ($\times10^{12}$)', size = 24)
+      # ParAMD styling
+      cbar = ax[ind*2, j].collections[0].colorbar.ax.tick_params(labelsize = 20)
+      ax[ind*2, j].invert_yaxis()
+      ax[ind*2, j].tick_params(axis = 'y', labelrotation=0)
+      ax[ind*2, j].set_xlabel('mult', fontsize = 20)
+      ax[ind*2, j].set_ylabel('lim', fontsize = 20)
+      ax[ind*2, j].tick_params(axis = 'both', labelsize = 20)
+      
+      # ParAMD Optimized styling
+      cbar = ax[ind*2+1, j].collections[0].colorbar.ax.tick_params(labelsize = 20)
+      ax[ind*2+1, j].invert_yaxis()
+      ax[ind*2+1, j].tick_params(axis = 'y', labelrotation=0)
+      ax[ind*2+1, j].set_xlabel('mult', fontsize = 20)
+      ax[ind*2+1, j].set_ylabel('lim', fontsize = 20)
+      ax[ind*2+1, j].tick_params(axis = 'both', labelsize = 20)
+      
+    ax[ind*2, 0].set_ylabel(f'{matrix} ParAMD\n\nlim', fontsize = 20)
+    ax[ind*2+1, 0].set_ylabel(f'{matrix} ParAMD Opt\n\nlim', fontsize = 20)
+  ax[0, 0].set_title('Time spent on core AMD (sec)', size = 20)
+  ax[0, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 20)
+  ax[0, 2].set_title(r'#Fill-ins ($\times10^8$)', size = 20)
+  ax[1, 0].set_title('Time spent on core AMD (sec)', size = 20)
+  ax[1, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 20)
+  ax[1, 2].set_title(r'#Fill-ins ($\times10^8$)', size = 20)
+  ax[2, 0].set_title('Time spent on core AMD (sec)', size = 20)
+  ax[2, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 20)
+  ax[2, 2].set_title(r'#Fill-ins ($\times10^{12}$)', size = 20)
+  ax[3, 0].set_title('Time spent on core AMD (sec)', size = 20)
+  ax[3, 1].set_title('Time spent on dist-2 indep sets (sec)', size = 20)
+  ax[3, 2].set_title(r'#Fill-ins ($\times10^{12}$)', size = 20)
   plt.tight_layout()
   savepath = scratch_dir / 'plots' / 'tuning.png'
   print(f'Saving tuning plot to: {savepath}')

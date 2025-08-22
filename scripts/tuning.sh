@@ -23,6 +23,10 @@ do
       OMP_NUM_THREADS=64 OMP_PLACE=cores ./build/paramd --breakdown \
         --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd --seed 1 --mult $mult --lim $lim \
         > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd.tuning.s1.t64.m$mult.l$lim.log
+      echo "----Running ParAMD Optimized with mult = $mult and lim = $lim"
+      OMP_NUM_THREADS=64 OMP_PLACE=cores ./build/paramd --breakdown \
+        --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd_optimized --seed 1 --mult $mult --lim $lim \
+        > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd_optimized.tuning.s1.t64.m$mult.l$lim.log
     done
   done
 done

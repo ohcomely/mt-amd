@@ -18,6 +18,10 @@ do
   OMP_NUM_THREADS=64 OMP_PLACE=cores ./build/paramd \
     --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd --seed 1 --stat \
     > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd.distribution.s1.t64.log
+  echo "--Running ParAMD Optimized with 64 thread(s)"
+  OMP_NUM_THREADS=64 OMP_PLACE=cores ./build/paramd \
+    --matrix $SCRATCH_DIR/dataset/$matrix/$matrix.mtx --algo paramd_optimized --seed 1 --stat \
+    > $SCRATCH_DIR/dataset/$matrix/$matrix.paramd_optimized.distribution.s1.t64.log
 done
 
 mkdir -p $SCRATCH_DIR/plots
